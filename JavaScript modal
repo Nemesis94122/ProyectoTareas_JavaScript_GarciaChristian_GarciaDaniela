@@ -1,0 +1,19 @@
+class TodoApp extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+
+    // Estado inicial de la aplicación
+    this.state = {
+      todos: this.loadFromStorage(),
+      filter: 'all', 
+      searchQuery: '',
+      apiTodos: [] 
+    };
+  }
+
+  connectedCallback() {
+    this.renderInitialStructure();
+    this.setupEventListeners();
+    this.renderTodoList();
+  }
