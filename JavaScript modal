@@ -17,3 +17,52 @@ class TodoApp extends HTMLElement {
     this.setupEventListeners();
     this.renderTodoList();
   }
+
+addTodo(title) {
+    const newTodo = {
+      id: this.generateId(),
+      title: title,
+      date: new Date().toLocaleDateString(),
+      completed: false,
+      isImported: false
+    };
+    this.state.todos.push(newTodo);
+    this.saveToStorage();
+    this.renderTodoList();
+  }
+
+  updateTodo(id, updatedTitle) {
+    const todo = this.state.todos.find(t => t.id === id);
+    if (todo && !todo.isImported) { 
+      todo.title = updatedTitle;
+      this.saveToStorage();
+      this.renderTodoList();
+    }
+  }
+
+  deleteTodo(id) {
+    this.state.todos = this.state.todos.filter(t => t.id !== id);
+    this.saveToStorage();
+    this.renderTodoList();
+  }
+
+  toggleTodo(id) {
+    const todo = this.state.todos.find(t => t.id === id);
+    if (todo) {
+      todo.completed = !todo.completed;
+      this.saveToStorage();
+      this.renderTodoList();
+    }
+  }
+
+  markAllAsCompleted() {
+    this.state.todos.forEach(t => t.completed = true);
+    this.saveToStorage();
+    this.renderTodoList();
+  }
+
+  clearAll() {
+    this.state.todos = [];
+    this.saveToStorage();
+    this.renderTodoList();
+  }
