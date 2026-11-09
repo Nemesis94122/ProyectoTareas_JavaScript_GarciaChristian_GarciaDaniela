@@ -51,6 +51,7 @@ class TodoApp extends HTMLElement {
       this.guardar();
     };
 
+    // Delegación de eventos para clics (Eliminar / Editar)
     s.getElementById('lst').onclick = (e) => {
       const id = e.target.dataset.id;
       if (!id) return;
@@ -64,6 +65,7 @@ class TodoApp extends HTMLElement {
       }
     };
     
+    // Delegación de eventos corregida para cambios de estado (Preserva la propiedad 'importada')
     s.getElementById('lst').onchange = (e) => {
       if (e.target.classList.contains('chk')) {
         const id = e.target.dataset.id;
@@ -100,18 +102,58 @@ class TodoApp extends HTMLElement {
     this.guardar();
   }
 
+  // NUEVA FUNCIÓN RENDER: Lee la estructura e inyecta nodos desde la plantilla externa en el HTML
   render() {
     const ul = this.shadowRoot.getElementById('lst');
-    ul.innerHTML = this.tareas
-      .filter(t => (this.filtro === 'todas' || (this.filtro === 'completadas' && t.completado) || (this.filtro === 'pendientes' && !t.completado)) && t.titulo.toLowerCase().includes(this.busqueda))
-      .map(t => `
-        <li class="${t.completado ? 'completada' : ''}">
-          <input type="checkbox" class="chk" data-id="${t.id}" ${t.completado ? 'checked' : ''}>
-          <span>${t.titulo} ${t.importada ? '<i>(API)</i>' : ''}</span>
-          <button class="edi" data-id="${t.id}" ${t.importada ? 'style="display:none"' : ''}>Editar</button>
-          <button class="del" data-id="${t.id}">Eliminar</button>
-        </li>
-      `).join('');
+    ul.innerHTML = ''; 
+
+    const plantillaItem = document.getElementById('tarea-item-template');
+    if (!plantillaItem) return;
+
+    const filtradas = this.tareas.filter(t => {
+      const coincideFiltro = this.filtro === 'todas' || 
+        (this.filtro === 'completadas' && t.completado) || 
+        (this.filtro === 'pendientes' && !t.completado);
+      const coincideBusqueda = t.titulo.toLowerCase().includes(this.busqueda);
+      return coincideFiltro && coincideBusqueda;
+    });
+
+    if (filtradas.length === 0) {
+      ul.innerHTML = `<li style="padding: 25px; color: #777; text-align: center; list-style: none;">No hay tareas en esta sección.</li>`;
+      return;
+    }
+
+    filtradas.forEach(t => {
+      const clon = plantillaItem.content.cloneNode(true);
+      const li = clon.querySelector('li');
+      const chk = clon.querySelector('.chk');
+      const tituloDiv = clon.querySelector('.titulo');
+      const etiquetaSmall = clon.querySelector('.categoria small');
+      const btnEdi = clon.querySelector('.edi');
+      const btnDel = clon.querySelector('.del');
+
+      chk.dataset.id = t.id;
+      chk.checked = t.completado;
+      if (btnEdi) btnEdi.dataset.id = t.id;
+      if (btnDel) btnDel.dataset.id = t.id;
+
+      if (tituloDiv) tituloDiv.textContent = t.titulo;
+      if (etiquetaSmall) etiquetaSmall.textContent = t.importada ? 'Importada (API)' : 'Creada Local';
+
+      if (t.completado) {
+        if (li) li.classList.add('completada');
+        if (tituloDiv) {
+          tituloDiv.style.textDecoration = 'line-through';
+          tituloDiv.style.color = '#777';
+        }
+      }
+
+      if (t.importada && btnEdi) {
+        btnEdi.style.display = 'none';
+      }
+
+      ul.appendChild(clon);
+    });
   }
 }
 
