@@ -1,4 +1,4 @@
-const API_URL = 'https://typicode.com';
+const API_URL = 'https://jsonplaceholder.typicode.com/todos';
 const STORAGE_KEY = 'app_tareas_data';
 
 class TodoApp extends HTMLElement {
