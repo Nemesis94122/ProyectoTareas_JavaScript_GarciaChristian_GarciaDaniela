@@ -1,184 +1,118 @@
+const API_URL = 'https://typicode.com';
+const STORAGE_KEY = 'app_tareas_data';
+
 class TodoApp extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-
-    // Estado inicial de la aplicación
-    this.state = {
-      todos: this.loadFromStorage(),
-      filter: 'all', 
-      searchQuery: '',
-      apiTodos: [] 
-    };
+    this.tareas = this.cargar();
+    this.filtro = 'todas';
+    this.busqueda = '';
+    this.editandoId = null;
   }
 
   connectedCallback() {
-    this.renderInitialStructure();
-    this.setupEventListeners();
-    this.renderTodoList();
+    this.shadowRoot.innerHTML = `
+      <input type="text" id="bus" placeholder="Buscar..."><select id="flt"><option value="todas">Todas</option><option value="completadas">Completadas</option><option value="pendientes">Pendientes</option></select>
+      <button id="nva">Nueva</button><button id="imp">Importar API</button><button id="mar">Marcar todas</button><button id="vac">Vaciar</button>
+      <ul id="lst"></ul>
+      <dialog id="mdl-f"><form id="frm"><h3>Tarea</h3><input type="text" id="ttl" required><label><input type="checkbox" id="cmp">Completado</label><button type="submit">Guardar</button><button type="button" onclick="this.closest('dialog').close()">Cerrar</button></form></dialog>
+      <dialog id="mdl-i"><h3>Selecciona tareas</h3><ul id="api-lst" style="max-height:200px; overflow-y:auto"></ul><button id="cnf">Importar</button><button type="button" onclick="this.closest('dialog').close()">Cerrar</button></dialog>
+    `;
+    this.setup();
   }
 
-addTodo(title) {
-    const newTodo = {
-      id: this.generateId(),
-      title: title,
-      date: new Date().toLocaleDateString(),
-      completed: false,
-      isImported: false
-    };
-    this.state.todos.push(newTodo);
-    this.saveToStorage();
-    this.renderTodoList();
+  cargar() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+  
+  guardar() { 
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.tareas)); } catch(e) { console.error(e); }
+    this.render(); 
   }
 
-  updateTodo(id, updatedTitle) {
-    const todo = this.state.todos.find(t => t.id === id);
-    if (todo && !todo.isImported) { 
-      todo.title = updatedTitle;
-      this.saveToStorage();
-      this.renderTodoList();
-    }
-  }
-
-  deleteTodo(id) {
-    this.state.todos = this.state.todos.filter(t => t.id !== id);
-    this.saveToStorage();
-    this.renderTodoList();
-  }
-
-  toggleTodo(id) {
-    const todo = this.state.todos.find(t => t.id === id);
-    if (todo) {
-      todo.completed = !todo.completed;
-      this.saveToStorage();
-      this.renderTodoList();
-    }
-  }
-
-  markAllAsCompleted() {
-    this.state.todos.forEach(t => t.completed = true);
-    this.saveToStorage();
-    this.renderTodoList();
-  }
-
-  clearAll() {
-    this.state.todos = [];
-    this.saveToStorage();
-    this.renderTodoList();
-  }
-
- async fetchApiTodos() {
-    const container = this.shadowRoot.getElementById('apiTasksContainer');
-    container.innerHTML = '<p>Cargando tareas de la API...</p>';
-    try {
-      const response = await fetch('https://jsonplaceholder.typicode.com/todos');
-      const data = await response.json();
-      this.state.apiTodos = data.slice(0, 10); 
-      this.renderImportModalList();
-    } catch (error) {
-      container.innerHTML = '<p style="color:red;">Error al conectar con la API.</p>';
-      console.error("Error cargando la API:", error);
-    }
-  }
-
-  importSelectedTodos() {
-    const checkboxes = this.shadowRoot.querySelectorAll('.import-checkbox:checked');
-    checkboxes.forEach(cb => {
-      const todoId = parseInt(cb.value);
-      const apiTodo = this.state.apiTodos.find(t => t.id === todoId);
-      if (apiTodo) {
-        this.state.todos.push({
-          id: this.generateId(), 
-          title: apiTodo.title,
-          date: new Date().toLocaleDateString(),
-          completed: apiTodo.completed,
-          isImported: true 
-        });
-      }
-    });
-    this.saveToStorage();
-    this.closeModal('importModal');
-    this.renderTodoList();
-  }
-
-  openTaskModal(todoId = null) {
-    const modal = this.shadowRoot.getElementById('taskModal');
-    const titleInput = this.shadowRoot.getElementById('modalTaskTitle');
-    const idInput = this.shadowRoot.getElementById('modalTaskId');
-    const modalTitle = this.shadowRoot.getElementById('modalTitleText');
-
-    if (todoId) {
-      const todo = this.state.todos.find(t => t.id === todoId);
-      if (todo.isImported) return; 
-      modalTitle.innerText = 'Editar Tarea';
-      idInput.value = todo.id;
-      titleInput.value = todo.title;
-    } else {
-      modalTitle.innerText = 'Nueva Tarea';
-      idInput.value = '';
-      titleInput.value = '';
-    }
-    modal.style.display = 'flex';
-  }
-
-  closeModal(modalId) {
-    this.shadowRoot.getElementById(modalId).style.display = 'none';
-  }
-
-  setupEventListeners() {
-    this.shadowRoot.addEventListener('click', (e) => {
-      const target = e.target;
-
-      if (target.id === 'btnCreate') this.openTaskModal();
-      if (target.id === 'btnMarkAll') this.markAllAsCompleted();
-      if (target.id === 'btnClearAll') this.clearAll();
-      if (target.id === 'btnImportOpen') {
-        this.shadowRoot.getElementById('importModal').style.display = 'flex';
-        this.fetchApiTodos();
-      }
-      
-      if (target.classList.contains('close-modal')) {
-        this.closeModal(target.closest('.modal').id);
-      }
-
-      const btnDelete = target.closest('.btn-delete');
-      if (btnDelete) this.deleteTodo(btnDelete.dataset.id);
-
-      const btnEdit = target.closest('.btn-edit');
-      if (btnEdit) this.openTaskModal(btnEdit.dataset.id);
-    });
-
-    this.shadowRoot.addEventListener('change', (e) => {
-      if (e.target.classList.contains('todo-check')) {
-        this.toggleTodo(e.target.dataset.id);
-      }
-    });
-
-    this.shadowRoot.getElementById('taskForm').addEventListener('submit', (e) => {
+  setup() {
+    const s = this.shadowRoot;
+    s.getElementById('nva').onclick = () => { this.editandoId = null; s.getElementById('frm').reset(); s.getElementById('mdl-f').showModal(); };
+    s.getElementById('imp').onclick = () => this.cargarAPI();
+    s.getElementById('mar').onclick = () => { this.tareas.forEach(t => t.completado = true); this.guardar(); };
+    s.getElementById('vac').onclick = () => { if(confirm('¿Vaciar?')) { this.tareas = []; this.guardar(); } };
+    s.getElementById('flt').onchange = (e) => { this.filtro = e.target.value; this.render(); };
+    s.getElementById('bus').oninput = (e) => { this.busqueda = e.target.value.toLowerCase().trim(); this.render(); };
+    s.getElementById('cnf').onclick = () => this.confirmarImportar();
+    
+    s.getElementById('frm').onsubmit = (e) => {
       e.preventDefault();
-      const id = this.shadowRoot.getElementById('modalTaskId').value;
-      const title = this.shadowRoot.getElementById('modalTaskTitle').value;
-
-      if (id) {
-        this.updateTodo(id, title);
+      const titulo = s.getElementById('ttl').value, completado = s.getElementById('cmp').checked;
+      if (this.editandoId) {
+        this.tareas = this.tareas.map(t => t.id === this.editandoId ? { ...t, titulo, completado } : t);
       } else {
-        this.addTodo(title);
+        this.tareas.push({ id: 'm_' + Date.now(), titulo, completado, importada: false });
       }
-      this.closeModal('taskModal');
-    });
+      s.getElementById('mdl-f').close();
+      this.guardar();
+    };
 
-    this.shadowRoot.getElementById('btnConfirmImport').addEventListener('click', () => {
-      this.importSelectedTodos();
-    });
+    s.getElementById('lst').onclick = (e) => {
+      const id = e.target.dataset.id;
+      if (!id) return;
+      if (e.target.classList.contains('del')) { this.tareas = this.tareas.filter(t => t.id !== id); this.guardar(); }
+      if (e.target.classList.contains('edi')) {
+        const t = this.tareas.find(x => x.id === id);
+        this.editandoId = id;
+        s.getElementById('ttl').value = t.titulo;
+        s.getElementById('cmp').checked = t.completado;
+        s.getElementById('mdl-f').showModal();
+      }
+    };
+    
+    s.getElementById('lst').onchange = (e) => {
+      if (e.target.classList.contains('chk')) {
+        const id = e.target.dataset.id;
+        this.tareas = this.tareas.map(t => t.id === id ? { ...t, completado: e.target.checked } : t);
+        this.guardar();
+      }
+    };
 
-    this.shadowRoot.getElementById('filterSelect').addEventListener('change', (e) => {
-      this.state.filter = e.target.value;
-      this.renderTodoList();
-    });
+    this.render();
+  }
 
-    this.shadowRoot.getElementById('searchInput').addEventListener('input', (e) => {
-      this.state.searchQuery = e.target.value.toLowerCase();
-      this.renderTodoList();
+  async cargarAPI() {
+    const s = this.shadowRoot, ul = s.getElementById('api-lst');
+    ul.innerHTML = 'Cargando...';
+    s.getElementById('mdl-i').showModal();
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error();
+      const datos = await res.json();
+      ul.innerHTML = datos.slice(0, 15).map(t => `
+        <li><label><input type="checkbox" class="api-chk" data-ttl="${t.title}" ${t.completed ? 'data-cmp="1"' : ''}> ${t.title}</label></li>
+      `).join('');
+    } catch (err) {
+      ul.innerHTML = '<span style="color:red">Error al cargar datos de la API</span>';
+    }
+  }
+
+  confirmarImportar() {
+    this.shadowRoot.querySelectorAll('.api-chk:checked').forEach(c => {
+      const idRand = 'a_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+      this.tareas.push({ id: idRand, titulo: c.dataset.ttl, completado: !!c.dataset.cmp, importada: true });
     });
+    this.shadowRoot.getElementById('mdl-i').close();
+    this.guardar();
+  }
+
+  render() {
+    const ul = this.shadowRoot.getElementById('lst');
+    ul.innerHTML = this.tareas
+      .filter(t => (this.filtro === 'todas' || (this.filtro === 'completadas' && t.completado) || (this.filtro === 'pendientes' && !t.completado)) && t.titulo.toLowerCase().includes(this.busqueda))
+      .map(t => `
+        <li class="${t.completado ? 'completada' : ''}">
+          <input type="checkbox" class="chk" data-id="${t.id}" ${t.completado ? 'checked' : ''}>
+          <span>${t.titulo} ${t.importada ? '<i>(API)</i>' : ''}</span>
+          <button class="edi" data-id="${t.id}" ${t.importada ? 'style="display:none"' : ''}>Editar</button>
+          <button class="del" data-id="${t.id}">Eliminar</button>
+        </li>
+      `).join('');
   }
 }
+
+if (!customElements.get('todo-app')) customElements.define('todo-app', TodoApp);
