@@ -12,14 +12,16 @@ class TodoApp extends HTMLElement {
   }
 
   connectedCallback() {
-    this.shadowRoot.innerHTML = `
-      <input type="text" id="bus" placeholder="Buscar..."><select id="flt"><option value="todas">Todas</option><option value="completadas">Completadas</option><option value="pendientes">Pendientes</option></select>
-      <button id="nva">Nueva</button><button id="imp">Importar API</button><button id="mar">Marcar todas</button><button id="vac">Vaciar</button>
-      <ul id="lst"></ul>
-      <dialog id="mdl-f"><form id="frm"><h3>Tarea</h3><input type="text" id="ttl" required><label><input type="checkbox" id="cmp">Completado</label><button type="submit">Guardar</button><button type="button" onclick="this.closest('dialog').close()">Cerrar</button></form></dialog>
-      <dialog id="mdl-i"><h3>Selecciona tareas</h3><ul id="api-lst" style="max-height:200px; overflow-y:auto"></ul><button id="cnf">Importar</button><button type="button" onclick="this.closest('dialog').close()">Cerrar</button></dialog>
-    `;
-    this.setup();
+    try {
+      const plantilla = document.getElementById('todo-app-template');
+      if (!plantilla) throw new Error("No se encontró la plantilla <template id='todo-app-template'>");
+
+      this.shadowRoot.appendChild(plantilla.content.cloneNode(true));
+      this.setup();
+    } catch (error) {
+      console.error("Error al inicializar el componente de tareas:", error);
+      this.shadowRoot.innerHTML = `<div style="padding: 20px; color: red;">Error crítico de interfaz: ${error.message}</div>`;
+    }
   }
 
   cargar() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
@@ -51,7 +53,6 @@ class TodoApp extends HTMLElement {
       this.guardar();
     };
 
-    // Delegación de eventos para clics (Eliminar / Editar)
     s.getElementById('lst').onclick = (e) => {
       const id = e.target.dataset.id;
       if (!id) return;
@@ -64,8 +65,6 @@ class TodoApp extends HTMLElement {
         s.getElementById('mdl-f').showModal();
       }
     };
-    
-    // Delegación de eventos corregida para cambios de estado (Preserva la propiedad 'importada')
     s.getElementById('lst').onchange = (e) => {
       if (e.target.classList.contains('chk')) {
         const id = e.target.dataset.id;
@@ -102,7 +101,6 @@ class TodoApp extends HTMLElement {
     this.guardar();
   }
 
-  // NUEVA FUNCIÓN RENDER: Lee la estructura e inyecta nodos desde la plantilla externa en el HTML
   render() {
     const ul = this.shadowRoot.getElementById('lst');
     ul.innerHTML = ''; 
