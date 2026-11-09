@@ -1,184 +1,108 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis tareas</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
     <div class="contenedor">
-
         <header class="encabezado">
-
             <div>
                 <p class="fecha">MONDAY, APRIL 14</p>
                 <h1>Mis tareas</h1>
-                <p class="subtitulo">
-                    Open tasks across your workspace
-                </p>
+                <p class="subtitulo">Open tasks across your workspace</p>
             </div>
-
             <div class="botones">
-
                 <button class="btn-import">Importar tarea</button>
-
                 <button class="btn-create" id="abrirModal">+ Crear tarea</button>
-
             </div>
-
         </header>
 
         <div class="menu">
-
             <div class="filtros">
                 <a href="#" class="activo">Todo</a>
                 <a href="#">Abierto</a>
                 <a href="#">Completado</a>
             </div>
-
             <div class="acciones">
                 <a href="#">Importar desde API</a>
                 <a href="#">Borrar lista</a>
             </div>
-
         </div>
 
         <div class="lista" id="listaTareas">
-
             <div class="tarea">
-
-                <input type="checkbox">
-
-                <div class="titulo">
-                    Ejemplo de tarea
-                </div>
-
+                <input type="checkbox" aria-label="Marcar tarea como completada">
+                <div class="titulo">Ejemplo de tarea</div>
                 <div class="categoria product">
-                    <span></span>
-                    Producto
+                    <span></span> Producto
                 </div>
-
                 <div class="info">
                     <p>06/11/2026</p>
                     <small>Pendientes</small>
                 </div>
-
             </div>
-
         </div>
-
     </div>
 
+    <!-- Modal Optimizado -->
     <div class="modal" id="modal">
-
         <div class="modal-contenido">
-
-            <button class="cerrar" id="cerrarModal">
-                ×
-            </button>
-
-            <p class="modal-subtitulo">
-                Nueva Tarea
-            </p>
-
+            <!-- aria-label agregado para accesibilidad -->
+            <button class="cerrar" id="cerrarModal" aria-label="Cerrar modal"> × </button>
+            <p class="modal-subtitulo">Nueva Tarea</p>
             <h2>Crear una tarea</h2>
-
+            
             <form>
-
-                <label>Nombre de la tarea</label>
-
-                <input
-                    type="text"
-                    class="input-grande"
-                    placeholder="What needs to be done?"
-                >
+                <!-- Vinculación de labels con inputs usando 'for' e 'id' -->
+                <label for="nombreTarea">Nombre de la tarea</label>
+                <input type="text" id="nombreTarea" class="input-grande" placeholder="What needs to be done?" required>
 
                 <div class="fila">
-
                     <div class="grupo">
-
-                        <label>Project</label>
-
-                        <select>
-                            <option>Product</option>
-                            <option>Design</option>
-                            <option>Operations</option>
-                            <option>Research</option>
+                        <label for="proyectoTarea">Projecto</label>
+                        <select id="proyectoTarea">
+                            <option>Producto</option>
+                            <option>Diseño</option>
+                            <option>Operaciones</option>
+                            <option>Búsqueda</option>
                         </select>
-
                     </div>
-
                     <div class="grupo">
-
-                        <label>Priority</label>
-
-                        <select>
-                            <option>Low</option>
-                            <option selected>Medium</option>
-                            <option>High</option>
+                        <label for="prioridadTarea">Prioridad</label>
+                        <select id="prioridadTarea">
+                            <option>Baja</option>
+                            <option selected>Media</option>
+                            <option>Alta</option>
                         </select>
-
                     </div>
-
                 </div>
 
                 <div class="fila">
-
                     <div class="grupo">
-
-                        <label>Registration date</label>
-
-                        <input type="date">
-
+                        <label for="fechaRegistro">Fecha de registro</label>
+                        <input type="date" id="fechaRegistro">
                     </div>
-
                     <div class="grupo">
-
-                        <label>Completion date</label>
-
-                        <input type="date">
-
+                        <label for="fechaFinalizacion">Fecha de Finalización</label>
+                        <input type="date" id="fechaFinalizacion">
                     </div>
-
                 </div>
 
                 <label class="check-fin">
-
-                    <input type="checkbox">
-
-                    Mark this task as finished
-
+                    <input type="checkbox"> Marca esta tarea como finalizada
                 </label>
 
                 <div class="acciones-modal">
-
-                    <button
-                        type="button"
-                        class="btn-cancel"
-                        id="cancelarModal">
-                        Cancel
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="btn-guardar">
-                        Create task
-                    </button>
-
+                    <button type="button" class="btn-cancel" id="cancelarModal">Cancelar</button>
+                    <button type="submit" class="btn-guardar">Crear tarea</button>
                 </div>
-
             </form>
-
         </div>
-
     </div>
 
     <script src="script.js"></script>
-
 </body>
-
 </html>
