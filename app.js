@@ -16,6 +16,13 @@ class TodoApp extends HTMLElement {
       const plantilla = document.getElementById('todo-app-template');
       if (!plantilla) throw new Error("No se encontró la plantilla <template id='todo-app-template'>");
 
+      // Inyectamos un enlace dinámico a tu archivo CSS externo dentro del Shadow DOM
+      // Esto rompe la barrera del aislamiento y le devuelve los estilos correctos al componente
+      const linkEstilos = document.createElement('link');
+      linkEstilos.setAttribute('rel', 'stylesheet');
+      linkEstilos.setAttribute('href', 'style.css'); // Asegúrate de que este sea el nombre correcto de tu archivo CSS
+      this.shadowRoot.appendChild(linkEstilos);
+
       this.shadowRoot.appendChild(plantilla.content.cloneNode(true));
       this.setup();
     } catch (error) {
@@ -65,6 +72,7 @@ class TodoApp extends HTMLElement {
         s.getElementById('mdl-f').showModal();
       }
     };
+    
     s.getElementById('lst').onchange = (e) => {
       if (e.target.classList.contains('chk')) {
         const id = e.target.dataset.id;
