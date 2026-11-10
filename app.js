@@ -16,11 +16,9 @@ class TodoApp extends HTMLElement {
       const plantilla = document.getElementById('todo-app-template');
       if (!plantilla) throw new Error("No se encontró la plantilla <template id='todo-app-template'>");
 
-      // Inyectamos un enlace dinámico a tu archivo CSS externo dentro del Shadow DOM
-      // Esto rompe la barrera del aislamiento y le devuelve los estilos correctos al componente
       const linkEstilos = document.createElement('link');
       linkEstilos.setAttribute('rel', 'stylesheet');
-      linkEstilos.setAttribute('href', 'style.css'); // Asegúrate de que este sea el nombre correcto de tu archivo CSS
+      linkEstilos.setAttribute('href', 'style.css');
       this.shadowRoot.appendChild(linkEstilos);
 
       this.shadowRoot.appendChild(plantilla.content.cloneNode(true));
@@ -40,7 +38,14 @@ class TodoApp extends HTMLElement {
 
   setup() {
     const s = this.shadowRoot;
-    s.getElementById('nva').onclick = () => { this.editandoId = null; s.getElementById('frm').reset(); s.getElementById('mdl-f').showModal(); };
+    
+    s.getElementById('nva').onclick = () => { 
+      this.editandoId = null; 
+      s.getElementById('frm').reset(); 
+      // Inicializa el input con la fecha de hoy por comodidad del usuario
+      s.getElementById('fch').value = new Date().toISOString().split('T')[0];
+      s.getElementById('mdl-f').showModal(); 
+    };
     s.getElementById('imp').onclick = () => this.cargarAPI();
     s.getElementById('mar').onclick = () => { this.tareas.forEach(t => t.completado = true); this.guardar(); };
     s.getElementById('vac').onclick = () => { if(confirm('¿Vaciar?')) { this.tareas = []; this.guardar(); } };
@@ -50,11 +55,14 @@ class TodoApp extends HTMLElement {
     
     s.getElementById('frm').onsubmit = (e) => {
       e.preventDefault();
-      const titulo = s.getElementById('ttl').value, completado = s.getElementById('cmp').checked;
+      const titulo = s.getElementById('ttl').value;
+      const completado = s.getElementById('cmp').checked;
+      const fecha = s.getElementById('fch').value; // Captura de la fecha seleccionada
+
       if (this.editandoId) {
-        this.tareas = this.tareas.map(t => t.id === this.editandoId ? { ...t, titulo, completado } : t);
+        this.tareas = this.tareas.map(t => t.id === this.editandoId ? { ...t, titulo, completado, fecha } : t);
       } else {
-        this.tareas.push({ id: 'm_' + Date.now(), titulo, completado, importada: false });
+        this.tareas.push({ id: 'm_' + Date.now(), titulo, completado, fecha, importada: false });
       }
       s.getElementById('mdl-f').close();
       this.guardar();
@@ -69,6 +77,7 @@ class TodoApp extends HTMLElement {
         this.editandoId = id;
         s.getElementById('ttl').value = t.titulo;
         s.getElementById('cmp').checked = t.completado;
+        s.getElementById('fch').value = t.fecha || new Date().toISOString().split('T')[0]; // Pone la fecha guardada
         s.getElementById('mdl-f').showModal();
       }
     };
@@ -93,7 +102,12 @@ class TodoApp extends HTMLElement {
       if (!res.ok) throw new Error();
       const datos = await res.json();
       ul.innerHTML = datos.map(t => `
-        <li><label><input type="checkbox" class="api-chk" data-ttl="${t.title}" ${t.completed ? 'data-cmp="1"' : ''}> ${t.title}</label></li>
+        <li style="padding: 10px; border-bottom: 1px solid #ececec; list-style: none;">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" class="api-chk" data-ttl="${t.title}" ${t.completed ? 'data-cmp="1"' : ''}> 
+            <span>${t.title}</span>
+          </label>
+        </li>
       `).join('');
     } catch (err) {
       ul.innerHTML = '<span style="color:red">Error al cargar datos de la API</span>';
@@ -101,9 +115,10 @@ class TodoApp extends HTMLElement {
   }
 
   confirmarImportar() {
+    const fechaHoy = new Date().toISOString().split('T')[0]; // Asigna la fecha actual a las importadas de la API
     this.shadowRoot.querySelectorAll('.api-chk:checked').forEach(c => {
       const idRand = 'a_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-      this.tareas.push({ id: idRand, titulo: c.dataset.ttl, completado: !!c.dataset.cmp, importada: true });
+      this.tareas.push({ id: idRand, titulo: c.dataset.ttl, completado: !!c.dataset.cmp, fecha: fechaHoy, importada: true });
     });
     this.shadowRoot.getElementById('mdl-i').close();
     this.guardar();
@@ -134,6 +149,7 @@ class TodoApp extends HTMLElement {
       const li = clon.querySelector('li');
       const chk = clon.querySelector('.chk');
       const tituloDiv = clon.querySelector('.titulo');
+      const txtFecha = clon.querySelector('.fecha-txt');
       const etiquetaSmall = clon.querySelector('.categoria small');
       const btnEdi = clon.querySelector('.edi');
       const btnDel = clon.querySelector('.del');
@@ -144,6 +160,12 @@ class TodoApp extends HTMLElement {
       if (btnDel) btnDel.dataset.id = t.id;
 
       if (tituloDiv) tituloDiv.textContent = t.titulo;
+      
+      // Inyectamos la fecha formateada en formato legible si existe
+      if (txtFecha) {
+        txtFecha.textContent = t.fecha ? t.fecha.split('-').reverse().join('/') : '';
+      }
+      
       if (etiquetaSmall) etiquetaSmall.textContent = t.importada ? 'Importada (API)' : 'Creada Local';
 
       if (t.completado) {
