@@ -92,7 +92,7 @@ class TodoApp extends HTMLElement {
       const res = await fetch(API_URL);
       if (!res.ok) throw new Error();
       const datos = await res.json();
-      ul.innerHTML = datos.slice(0, 15).map(t => `
+      ul.innerHTML = datos.map(t => `
         <li><label><input type="checkbox" class="api-chk" data-ttl="${t.title}" ${t.completed ? 'data-cmp="1"' : ''}> ${t.title}</label></li>
       `).join('');
     } catch (err) {
