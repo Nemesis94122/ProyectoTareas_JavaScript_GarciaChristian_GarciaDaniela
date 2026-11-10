@@ -45,6 +45,12 @@
                 <form id="frm">
                     <label>Nombre de la tarea</label>
                     <input type="text" id="ttl" class="input-grande" placeholder="Ej. Redactar informe de operaciones" required>
+                        <div class="fila">
+                            <div class="grupo">
+                                    <label>Fecha de Registro</label>
+                                    <input type="date" id="fch" required>
+                            </div>
+                        </div>
                     
                     <div class="check-fin">
                         <input type="checkbox" id="cmp">
@@ -81,7 +87,10 @@
     </div>
     <div class="titulo"></div>
     <div class="categoria info">
-      <span></span><small></small>
+      <span></span>
+      <!-- Agregamos un contenedor strong para pintar la fecha de registro -->
+      <strong class="fecha-txt" style="font-weight: normal; margin-right: 10px;"></strong>
+      <small></small>
     </div>
     <div class="botones" style="justify-content: flex-end; gap: 10px;">
       <button class="edi btn-import" style="padding: 5px 15px; border-radius: 6px;">Editar</button>
