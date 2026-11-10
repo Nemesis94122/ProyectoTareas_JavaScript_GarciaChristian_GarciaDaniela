@@ -7,94 +7,93 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="contenedor">
+        <div class="encabezado">
+            <div>
+                <p class="fecha">TAREAS DE HOY</p>
+                <h1>Mis tareas</h1>
+                <p class="subtitulo">Open tasks across your workspace</p>
+            </div>
+        </div>
         <todo-app></todo-app>
     </div>
 
     <template id="todo-app-template">
-        <div class="encabezado">
-            <div>
-                <div class="fecha" id="fecha-actual">TAREAS DE HOY</div>
-                <h1>Mis tareas</h1>
-                <p class="subtitulo">Open tasks across your workspace</p>
-            </div>
-            <div class="botones">
-                <button class="btn-import" id="imp">Importar desde API</button>
-                <button class="btn-create" id="nva">Crear tarea</button>
-            </div>
-        </div>
-
         <div class="menu">
             <div class="filtros">
-                <select id="flt" style="width: auto; margin-bottom: 0; padding: 5px 15px;">
+                <input type="text" id="bus" placeholder="Buscar tarea..." class="input-grande" style="max-width: 250px; margin-bottom: 0; padding: 10px 15px;">
+                <select id="flt" style="max-width: 180px; margin-bottom: 0; padding: 10px 15px;">
                     <option value="todas">Todas</option>
-                    <option value="completadas">Completadas</option>
                     <option value="pendientes">Pendientes</option>
+                    <option value="completadas">Completadas</option>
                 </select>
-                <input type="text" id="bus" placeholder="Buscar tarea..." style="width: auto; margin-bottom: 0; padding: 5px 15px; border-radius: 10px;">
             </div>
-            <div class="acciones">
-                <a href="#" id="mar">Marcar todas como completadas</a>
-                <a href="#" id="vac">Borrar lista completa</a>
+            <div class="botones">
+                <button id="imp" class="btn-import">Importar desde API</button>
+                <button id="nva" class="btn-create">Crear tarea</button>
+                <button id="mar" class="btn-import">Marcar todas</button>
+                <button id="vac" class="btn-import" style="color: #cf6d4d; border-color: #cf6d4d;">Borrar lista</button>
             </div>
         </div>
 
-        <ul class="lista" id="lst"></ul>
+        <div class="lista">
+            <ul id="lst" style="list-style: none; padding: 0; margin: 0;"></ul>
+        </div>
 
         <dialog id="mdl-f">
-            <button class="cerrar" onclick="this.closest('dialog').close()">×</button>
-            <div class="modal-subtitulo">NUEVA TAREA</div>
-            <h2>Crear una tarea</h2>
-            <form id="frm">
-                <label for="ttl">Nombre de la tarea</label>
-                <input type="text" id="ttl" class="input-grande" required placeholder="Escribe la tarea aquí...">
-                
-                <label for="fch">Fecha Límite</label>
-                <input type="date" id="fch" required class="input-grande">
-
-                <label class="check-fin">
-                    <input type="checkbox" id="cmp" class="chk">
-                    <span>Marca esta tarea como finalizada</span>
-                </label>
-
-                <div class="acciones-modal">
-                    <button type="button" class="btn-cancel" onclick="this.closest('dialog').close()">Cancelar</button>
-                    <button type="submit" class="btn-guardar">Guardar tarea</button>
-                </div>
-            </form>
+            <div class="modal-contenido">
+                <button type="button" class="cerrar" onclick="this.closest('dialog').close()">×</button>
+                <p class="modal-subtitulo">NUEVA TAREA</p>
+                <h2>Crear una tarea</h2>
+                <form id="frm">
+                    <label>Nombre de la tarea</label>
+                    <input type="text" id="ttl" class="input-grande" placeholder="Ej. Redactar informe de operaciones" required>
+                    <label>Fecha de Registro</label>
+                    <input type="date" id="fch" required>
+                    <div class="check-fin">
+                        <input type="checkbox" id="cmp">
+                        <label for="cmp" style="margin-bottom: 0; cursor: pointer;">Marca esta tarea como finalizada</label>
+                    </div>
+                    <div class="acciones-modal">
+                        <button type="button" class="btn-cancel" onclick="this.closest('dialog').close()">Cancelar</button>
+                        <button type="submit" class="btn-guardar">Guardar tarea</button>
+                    </div>
+                </form>
+            </div>
         </dialog>
 
         <dialog id="mdl-i">
-            <button class="cerrar" onclick="this.closest('dialog').close()">×</button>
-            <div class="modal-subtitulo">Importación desde API</div>
-            <h2>Importar tareas</h2>
-            <p>Selecciona los elementos que deseas agregar localmente:</p>
-            <ul id="api-lst" style="max-height: 250px; overflow-y: auto; margin: 20px 0; border: 1px solid #eee; padding: 10px; border-radius: 10px;"></ul>
-            <div class="acciones-modal">
-                <button type="button" class="btn-cancel" onclick="this.closest('dialog').close()">Cerrar</button>
-                <button type="button" class="btn-guardar" id="cnf">Importar seleccionadas</button>
+            <div class="modal-contenido">
+                <button type="button" class="cerrar" onclick="this.closest('dialog').close()">×</button>
+                <p class="modal-subtitulo">Importación desde API</p>
+                <h2>Importar tareas</h2>
+                <ul id="api-lst" style="max-height: 250px; overflow-y: auto; list-style: none; padding: 0; margin-bottom: 20px;"></ul>
+                <div class="acciones-modal">
+                    <button type="button" class="btn-cancel" onclick="this.closest('dialog').close()">Cerrar</button>
+                    <button type="button" id="cnf" class="btn-guardar">Importar seleccionadas</button>
+                </div>
             </div>
         </dialog>
     </template>
 
     <template id="tarea-item-template">
-        <li class="tarea">
+        <li class="tarea" style="list-style: none;">
             <div>
-                <input type="checkbox" class="chk" style="transform: scale(1.3); cursor: pointer;">
+                <input type="checkbox" class="chk" style="transform: scale(1.2); cursor:pointer;">
             </div>
             <div class="titulo"></div>
-            <div class="info">
-                <span class="fecha-txt" style="font-weight: bold; color: #555;"></span>
-                <span class="categoria"><small></small></span>
+            <div class="categoria info">
+                <span></span>
+                <strong class="fecha-txt" style="font-weight: normal; margin-right: 10px;"></strong>
+                <small></small>
             </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="edi btn-import" style="padding: 5px 15px; border-radius: 8px;">Editar</button>
-                <button class="del btn-import" style="padding: 5px 15px; border-radius: 8px; border-color: #fca5a5; color: #ef4444;">Eliminar</button>
+            <div class="botones" style="justify-content: flex-end; gap: 10px;">
+                <button class="edi btn-import" style="padding: 5px 15px; border-radius: 6px;">Editar</button>
+                <button class="del btn-import" style="padding: 5px 15px; border-radius: 6px; color: #cf6d4d; border-color: #cf6d4d;">Eliminar</button>
             </div>
         </li>
     </template>
 
-    <script src="todo-app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
